@@ -30,21 +30,24 @@ STDIN       equ     0
 STDOUT      equ     1
 
 ; --------------------------------------------------------------------------------
-RDCRD:
-        mov     rax, [i]
-        cmp     rax, card_len
-        jne     .exit
-
-        mov     qword [i], 0
-
-        ; read card into card[1:80]
+READ_ALL:
 		mov     rdx, card_len           ; maximum number of bytes to read
 		mov     rsi, card               ; buffer to read into
 		mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
         syscall
+        ret
 
-.exit:
+; --------------------------------------------------------------------------------
+RDCRD:
+        mov     rsi, [i]
+        mov     rdi, card
+        mov     rax, 0
+        mov     al, [rdi + rsi]
+
+        inc     rsi
+        mov     [i], rsi
+
         ret
 
 ; --------------------------------------------------------------------------------
@@ -61,33 +64,13 @@ SQUASHER:
 
 .off:
         call    RDCRD
-
-        mov     rsi, [i]
-        xor     rax, rax
-        mov     rdi, card
-        mov     al, [rdi + rsi]
         mov     [t1], rax
-
-        inc     rsi
-        mov     [i], rsi
-
-        mov     rax, [t1]               ; redundant, value still in register
         cmp     rax, '*'
         jne     .not_equal_ast
 
 .equal_ast:
         call    RDCRD
-
-        mov     rsi, [i]                ; redundant, value still in register
-        xor     rax, rax
-        mov     rdi, card
-        mov     al, [rdi + rsi]
         mov     [t2], rax
-
-        inc     rsi
-        mov     [i], rsi
-
-        mov     rax, [t2]               ; redundant, value still in register
         cmp     rax, '*'
         jne     .not_equal_second_ast
 
@@ -138,7 +121,8 @@ _exitProgram:
 
 _main:
         mov     qword [switch], OFF
-        mov     qword [i], card_len
+        mov     qword [i], 0
+        call    READ_ALL
         call    WRITE
 
 .finished:

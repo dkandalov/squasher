@@ -28,7 +28,6 @@ section .bss
 i:              resq    1
 card:           resq    CARD_LEN
 
-char:           resq    1
 lastChar:       resq    1
 switch:         resq    1
 squasherOutput: resq    1
@@ -73,14 +72,14 @@ SQUASHER:
         cmp     rax, '*'
         jne     .output_rax
 
-        mov     [char], rax
+        mov     rbx, rax
         _call   NEXT_CHAR
         cmp     rax, '*'
         je      .do_squashing
 
         mov     [lastChar], rax
         mov     qword [switch], ON  ; remember to write char from lastChar next time
-        mov     rax, [char]
+        mov     rax, rbx
         jmp     .output_rax
 
 .do_squashing:

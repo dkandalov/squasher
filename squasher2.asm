@@ -27,7 +27,6 @@ instruction_at_SQUASHER:   dq    SQUASHER
 section .bss
 i:              resq    1
 card:           resq    CARD_LEN
-char:           resq    1
 lastChar:       resq    1
 squasherOutput: resq    1
 
@@ -62,14 +61,13 @@ SQUASHER:
         cmp     rax, '*'
         jne     .output_rax
 
-        mov     [char], rax
+        mov     rbx, rax
         call    NEXT_CHAR
         cmp     rax, '*'
         je      .do_squashing
 
-		mov     [lastChar], rax         ; save rax because its value would be erased by another coroutine
-		mov     rax, [char]
-		mov     [squasherOutput], rax
+		mov     [lastChar], rax         ; save rax because its value will be erased by another coroutine
+		mov     [squasherOutput], rbx
         _call   WRITE
 
         mov     rax, [lastChar]

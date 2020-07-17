@@ -14,26 +14,27 @@ CARD_LEN    equ     80
 
 section .bss
 
-switch:         resq    1
 i:              resq    1
 card:           resq    CARD_LEN
 t2:             resq    1
+switch:         resq    1
 squasherOutput: resq    1
 
 
 section .text
 
 ; --------------------------------------------------------------------------------
-READ_ALL:
+READ_CARD:
 		mov     rdx, CARD_LEN           ; maximum number of bytes to read
 		mov     rsi, card               ; buffer to read into
 		mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
         syscall
-        ret
+        mov     qword [i], 0
+	    ret
 
 ; --------------------------------------------------------------------------------
-RDCRD:
+NEXT_CHAR:
         mov     rsi, [i]
         mov     rdi, card
         mov     rax, 0
@@ -55,12 +56,12 @@ SQUASHER:
         jmp     .output_rax
 
 .off:
-        call    RDCRD
+        call    NEXT_CHAR
         mov     rbx, rax            ; temporary save char into rbx
         cmp     rax, '*'
         jne     .output_rax
 
-        call    RDCRD
+        call    NEXT_CHAR
         mov     [t2], rax
         cmp     rax, '*'
         je      .do_squashing
@@ -78,6 +79,7 @@ SQUASHER:
 
 ; --------------------------------------------------------------------------------
 WRITE:
+        mov     qword [switch], OFF
 .loop:
         call    SQUASHER
 
@@ -95,9 +97,7 @@ WRITE:
 ; --------------------------------------------------------------------------------
 global  _main
 _main:
-        mov     qword [switch], OFF
-        mov     qword [i], 0
-        call    READ_ALL
+        call    READ_CARD
         call    WRITE
 
         mov     rax, SYS_EXIT

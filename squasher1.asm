@@ -23,10 +23,13 @@ out:    resq    1                       ; module global data for SQUASHER, WRITE
 
         section .text
 
-; --------------------------------------------------------------------------------
-SYS_READ equ    0x2000003
-STDIN   equ     0
+SYS_READ    equ     0x2000003
+SYS_WRITE   equ     0x2000004
+SYS_EXIT    equ     0x2000001
+STDIN       equ     0
+STDOUT      equ     1
 
+; --------------------------------------------------------------------------------
 RDCRD:
         mov     rax, [i]
         cmp     rax, card_len
@@ -104,17 +107,13 @@ SQUASHER:
         ret
 
 ; --------------------------------------------------------------------------------
-SYS_WRITE equ   0x2000004
-STDOUT  equ     1
 
 printRbx:
-        ; 1 character
         mov     rdx, 1                  ; message length
         mov     rsi, rbx                ; message to write
         mov     rdi, STDOUT             ; file descriptor
         mov     rax, SYS_WRITE
         syscall
-
         ret
 
 ; --------------------------------------------------------------------------------
@@ -126,7 +125,7 @@ WRITE:
         ; so it can only return a single read element. The look ahead
         ; reads a second element and thus needs a switch to return the
         ; looked "ahead" element on next call.
-        lea     rbx, [out]
+        mov     rbx, out
         call    printRbx
 
         mov     rax, [i]
@@ -136,8 +135,6 @@ WRITE:
         ret
 
 ; --------------------------------------------------------------------------------
-SYS_EXIT equ    0x2000001
-
 _exitProgram:
         mov     rax, SYS_EXIT
         mov     rdi, 0                  ; return code = 0
@@ -147,12 +144,8 @@ _exitProgram:
         global  _main
 
 _main:
-        ; set up switch
         mov     qword [switch], OFF
-
-        ; set up global data
         mov     qword [i], card_len
-
         call    WRITE
 
 .finished:

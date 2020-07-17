@@ -108,14 +108,6 @@ SQUASHER:
 
 ; --------------------------------------------------------------------------------
 
-printRbx:
-        mov     rdx, 1                  ; message length
-        mov     rsi, rbx                ; message to write
-        mov     rdi, STDOUT             ; file descriptor
-        mov     rax, SYS_WRITE
-        syscall
-        ret
-
 ; --------------------------------------------------------------------------------
 WRITE:
 .loop:
@@ -125,8 +117,11 @@ WRITE:
         ; so it can only return a single read element. The look ahead
         ; reads a second element and thus needs a switch to return the
         ; looked "ahead" element on next call.
-        mov     rbx, out
-        call    printRbx
+        mov     rdx, 1                  ; message length
+        mov     rsi, out                ; message to write
+        mov     rdi, STDOUT             ; file descriptor
+        mov     rax, SYS_WRITE
+        syscall
 
         mov     rax, [i]
         cmp     rax, card_len
@@ -150,6 +145,3 @@ _main:
 
 .finished:
         jmp     _exitProgram
-
-debug:
-	db 'x'

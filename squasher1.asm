@@ -58,7 +58,6 @@ SQUASHER:
 .on:
         mov     rax, [t2]
         mov     [out], rax
-
         mov     qword [switch], OFF
         jmp     .exit
 
@@ -68,13 +67,11 @@ SQUASHER:
         cmp     rax, '*'
         jne     .not_equal_ast
 
-.equal_ast:
         call    RDCRD
         mov     [t2], rax
         cmp     rax, '*'
         jne     .not_equal_second_ast
 
-.equal_second_ast:
         mov     qword [t1], '^'
         jmp     .not_equal_ast
 
@@ -82,7 +79,7 @@ SQUASHER:
         mov     qword [switch], ON
         jmp     .not_equal_ast
 
-.not_equal_ast:                         ; label 1
+.not_equal_ast:
         mov     rax, [t1]
         mov     [out], rax
 

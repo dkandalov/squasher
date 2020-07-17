@@ -65,21 +65,19 @@ SQUASHER:
         call    RDCRD
         mov     [t1], rax
         cmp     rax, '*'
-        jne     .not_equal_ast
+        jne     .output_t1
 
         call    RDCRD
         mov     [t2], rax
         cmp     rax, '*'
-        jne     .not_equal_second_ast
-
-        mov     qword [t1], '^'
-        jmp     .not_equal_ast
-
-.not_equal_second_ast:
+        je      .equal_second_ast
         mov     qword [switch], ON
-        jmp     .not_equal_ast
+        jmp     .output_t1
 
-.not_equal_ast:
+.equal_second_ast:
+        mov     qword [t1], '^'
+
+.output_t1:
         mov     rax, [t1]
         mov     [out], rax
 

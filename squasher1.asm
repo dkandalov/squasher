@@ -1,11 +1,18 @@
 bits 64
 default rel
 
-%define ON          qword 1
-%define OFF         qword 0
-%define CARD_LEN    80
+SYS_EXIT    equ     0x2000001
+SYS_READ    equ     0x2000003
+SYS_WRITE   equ     0x2000004
+STDIN       equ     0
+STDOUT      equ     1
 
-        section .bss
+OFF         equ     0
+ON          equ     1
+CARD_LEN    equ     80
+
+
+section .bss
 
 switch:         resq    1
 i:              resq    1
@@ -13,13 +20,8 @@ card:           resq    CARD_LEN
 t2:             resq    1
 squasherOutput: resq    1
 
-        section .text
 
-SYS_READ    equ     0x2000003
-SYS_WRITE   equ     0x2000004
-SYS_EXIT    equ     0x2000001
-STDIN       equ     0
-STDOUT      equ     1
+section .text
 
 ; --------------------------------------------------------------------------------
 READ_ALL:

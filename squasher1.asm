@@ -11,6 +11,12 @@ OFF         equ     0
 ON          equ     1
 CARD_LEN    equ     80
 
+%macro _call 1
+		mov     rax, %%_end
+        push    qword rax
+        jmp     %1
+%%_end: nop
+%endmacro
 
 section .bss
 
@@ -57,12 +63,12 @@ SQUASHER:
         jmp     .output_rax
 
 .off:
-        call    NEXT_CHAR
+        _call   NEXT_CHAR
         cmp     rax, '*'
         jne     .output_rax
 
         mov     rbx, rax            ; temporary save char into rbx
-        call    NEXT_CHAR
+        _call   NEXT_CHAR
         cmp     rax, '*'
         je      .do_squashing
 
@@ -82,7 +88,7 @@ SQUASHER:
 WRITE:
         mov     qword [switch], OFF
 .loop:
-        call    SQUASHER
+        _call   SQUASHER
 
         mov     rdx, 1                  ; message length
         mov     rsi, squasherOutput     ; message to write
@@ -98,8 +104,8 @@ WRITE:
 ; --------------------------------------------------------------------------------
 global  _main
 _main:
-        call    READ_CARD
-        call    WRITE
+        _call   READ_CARD
+        _call   WRITE
 
         mov     rax, SYS_EXIT
         mov     rdi, 0                  ; return code = 0

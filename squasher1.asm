@@ -12,10 +12,15 @@ ON          equ     1
 CARD_LEN    equ     80
 
 %macro _call 1
-		mov     rax, %%_end
-        push    qword rax
+		mov     rdx, %%_end
+        push    qword rdx
         jmp     %1
 %%_end: nop
+%endmacro
+
+%macro _return 0
+		pop     rdx
+        jmp     rdx
 %endmacro
 
 section .bss
@@ -39,19 +44,19 @@ READ_CARD:
         mov     rax, SYS_READ
         syscall
         mov     qword [i], 0
-	    ret
+	    _return
 
 ; --------------------------------------------------------------------------------
 NEXT_CHAR:
         mov     rsi, [i]
         mov     rdi, card
         mov     rax, 0
-        mov     al, [rdi + rsi]
+        mov     al, [rdi + rsi]         ; output is stored in rax
 
         inc     rsi
         mov     [i], rsi
 
-        ret
+        _return
 
 ; --------------------------------------------------------------------------------
 SQUASHER:
@@ -83,7 +88,7 @@ SQUASHER:
 
 .output_rax:
         mov     [squasherOutput], rax
-        ret
+        _return
 
 ; --------------------------------------------------------------------------------
 WRITE:
@@ -100,7 +105,7 @@ WRITE:
         mov     rax, [i]
         cmp     rax, CARD_LEN
         jne     .loop
-        ret
+        _return
 
 ; --------------------------------------------------------------------------------
 global  _main

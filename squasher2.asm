@@ -12,25 +12,23 @@ ON          equ     1
 CARD_LEN    equ     80
 
 %macro _call 1
-		pop     rax                 ; pop address of the instruction store for the current function
-		mov     rbx, %%_end
-		mov     [rax], rbx          ; update the instruction store
+		pop     rdx                     ; pop address of the instruction store for the current function/coroutine
+		mov     rcx, %%_end
+		mov     [rdx], rcx              ; update the instruction store
 
-		mov     rax, instruction_%1
-        push    rax                 ; push address of the instruction store so that function can update it on exit
-        jmp     [instruction_%1]
+		mov     rdx, instruction_at_%1
+        push    rdx                     ; push address of the instruction store so that the next function/coroutine can update it on exit
+        jmp     [instruction_at_%1]
 %%_end: nop
 %endmacro
 
+section .data
+instruction_at_WRITE:      dq    WRITE
+instruction_at_SQUASHER:   dq    SQUASHER
+
 section .bss
-
-instruction__main:      resq    1
-instruction_WRITE:      resq    1
-instruction_SQUASHER:   resq    1
-
 i:              resq    1
 card:           resq    CARD_LEN
-
 char:           resq    1
 lastChar:       resq    1
 switch:         resq    1
@@ -54,7 +52,7 @@ NEXT_CHAR:
         mov     rsi, [i]
         mov     rdi, card
         mov     rax, 0
-        mov     al, [rdi + rsi]
+        mov     al, [rdi + rsi]         ; output is stored in rax
 
         inc     rsi
         mov     [i], rsi
@@ -72,17 +70,17 @@ SQUASHER:
         jmp     .output_rax
 
 .off:
-        call   NEXT_CHAR
+        call    NEXT_CHAR
         cmp     rax, '*'
         jne     .output_rax
 
         mov     [char], rax
-        call   NEXT_CHAR
+        call    NEXT_CHAR
         cmp     rax, '*'
         je      .do_squashing
 
         mov     [lastChar], rax
-        mov     qword [switch], ON  ; remember to write char from lastChar next time
+        mov     qword [switch], ON  ; remember to write lastChar next time
         mov     rax, [char]
         jmp     .output_rax
 
@@ -97,6 +95,8 @@ SQUASHER:
 ; --------------------------------------------------------------------------------
 WRITE:
         mov     qword [switch], OFF
+        mov     rax, instruction_at_WRITE
+        push    rax
 .loop:
         _call   SQUASHER
 
@@ -110,23 +110,14 @@ WRITE:
         cmp     rax, CARD_LEN
         jne     .loop
 
-        _call   _main
+		pop     rax
+        ret
 
 ; --------------------------------------------------------------------------------
 global  _main
 _main:
-		mov     rax, _main
-		mov     qword [instruction__main], rax
-		mov     rax, WRITE
-		mov     qword [instruction_WRITE], rax
-		mov     rax, SQUASHER
-		mov     qword [instruction_SQUASHER], rax
-
         call    READ_CARD
-
-        mov     rax, instruction__main
-        push    rax
-        _call   WRITE
+        call    WRITE
 
         mov     rax, SYS_EXIT
         mov     rdi, 0                  ; return code = 0

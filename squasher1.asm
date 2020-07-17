@@ -1,24 +1,17 @@
 bits 64
 default rel
 
-%define NULL    qword 0
-
-card_len equ    80
+%define ON          qword 1
+%define OFF         qword 0
+%define CARD_LEN    80
 
         section .bss
 
-switch: resq    1                       ; module global data for SQUASHER
-%define ON      qword 1
-%define OFF     qword 0
-
-i:      resq    1                       ; module global data for RDCRD and SQUASHER
-card:   resq    card_len                ; module global data for RDCRD and SQUASHER
-
-t2:     resq    1                       ; module global data for SQUASHER
-
-bytesRead: resq 1                       ; module local data for SQUASHER
-
-out:    resq    1                       ; module global data for SQUASHER, WRITE
+switch:         resq    1
+i:              resq    1
+card:           resq    CARD_LEN
+t2:             resq    1
+squasherOutput: resq    1
 
         section .text
 
@@ -30,7 +23,7 @@ STDOUT      equ     1
 
 ; --------------------------------------------------------------------------------
 READ_ALL:
-		mov     rdx, card_len           ; maximum number of bytes to read
+		mov     rdx, CARD_LEN           ; maximum number of bytes to read
 		mov     rsi, card               ; buffer to read into
 		mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
@@ -68,17 +61,17 @@ SQUASHER:
         call    RDCRD
         mov     [t2], rax
         cmp     rax, '*'
-        je      .equal_second_ast
+        je      .do_squashing
 
-        mov     qword [switch], ON
+        mov     qword [switch], ON  ; remember to write char from t2 next time
         mov     rax, rbx            ; restore char from rbx
         jmp     .output_rax
 
-.equal_second_ast:
+.do_squashing:
         mov     rax, '^'
 
 .output_rax:
-        mov     [out], rax
+        mov     [squasherOutput], rax
         ret
 
 ; --------------------------------------------------------------------------------
@@ -86,36 +79,25 @@ WRITE:
 .loop:
         call    SQUASHER
 
-        ; out is output area of SQUASHER and only holds a single byte,
-        ; so it can only return a single read element. The look ahead
-        ; reads a second element and thus needs a switch to return the
-        ; looked "ahead" element on next call.
         mov     rdx, 1                  ; message length
-        mov     rsi, out                ; message to write
+        mov     rsi, squasherOutput     ; message to write
         mov     rdi, STDOUT             ; file descriptor
         mov     rax, SYS_WRITE
         syscall
 
         mov     rax, [i]
-        cmp     rax, card_len
+        cmp     rax, CARD_LEN
         jne     .loop
-
         ret
 
 ; --------------------------------------------------------------------------------
-_exitProgram:
-        mov     rax, SYS_EXIT
-        mov     rdi, 0                  ; return code = 0
-        syscall
-
-; --------------------------------------------------------------------------------
-        global  _main
-
+global  _main
 _main:
         mov     qword [switch], OFF
         mov     qword [i], 0
         call    READ_ALL
         call    WRITE
 
-.finished:
-        jmp     _exitProgram
+        mov     rax, SYS_EXIT
+        mov     rdi, 0                  ; return code = 0
+        syscall

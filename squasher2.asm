@@ -12,17 +12,12 @@ default rel
 %%_end: nop
 %endmacro
 
-SYS_EXIT    equ     0x2000001
-SYS_READ    equ     0x2000003
-SYS_WRITE   equ     0x2000004
-STDIN       equ     0
-STDOUT      equ     1
-
-CARD_LEN    equ     80
-
-section .data
-instruction_at_WRITE:      dq    WRITE
-instruction_at_SQUASHER:   dq    SQUASHER
+SYS_EXIT        equ     0x2000001
+SYS_READ        equ     0x2000003
+SYS_WRITE       equ     0x2000004
+STDIN           equ     0
+STDOUT          equ     1
+CARD_LEN        equ     80
 
 section .bss
 i:              resq    1
@@ -30,11 +25,15 @@ card:           resq    CARD_LEN
 lastChar:       resq    1
 squasherOutput: resq    1
 
+section .data
+instruction_at_main:       dq    main
+instruction_at_squasher:   dq    squasher
+
 
 section .text
 
 ; --------------------------------------------------------------------------------
-READ_CARD:
+read_card:
 		mov     rdx, CARD_LEN           ; maximum number of bytes to read
 		mov     rsi, card               ; buffer to read into
 		mov     rdi, STDIN              ; file descriptor
@@ -44,7 +43,7 @@ READ_CARD:
 	    ret
 
 ; --------------------------------------------------------------------------------
-NEXT_CHAR:
+next_char:
         mov     rsi, [i]
         mov     rdi, card
         mov     rax, 0
@@ -56,19 +55,19 @@ NEXT_CHAR:
         ret
 
 ; --------------------------------------------------------------------------------
-SQUASHER:
-        call    NEXT_CHAR
+squasher:
+        call    next_char
         cmp     rax, '*'
         jne     .output_rax
 
         mov     rbx, rax
-        call    NEXT_CHAR
+        call    next_char
         cmp     rax, '*'
         je      .do_squashing
 
 		mov     [lastChar], rax         ; save rax because its value will be erased by another coroutine
 		mov     [squasherOutput], rbx
-        _call   WRITE
+        _call   main
 
         mov     rax, [lastChar]
         jmp     .output_rax
@@ -78,35 +77,34 @@ SQUASHER:
 
 .output_rax:
         mov     [squasherOutput], rax
-        _call   WRITE
-		jmp     SQUASHER
+        _call   main
+		jmp     squasher
 
 ; --------------------------------------------------------------------------------
-WRITE:
-        mov     rax, instruction_at_WRITE
-        push    rax                     ; prepare stack for coroutine call
-.loop:
-        _call   SQUASHER
-
+write:
         mov     rdx, 1                  ; message length
-        mov     rsi, squasherOutput     ; message to write
+        mov     rsi, rax                ; message to write
         mov     rdi, STDOUT             ; file descriptor
         mov     rax, SYS_WRITE
         syscall
+        ret
+
+; --------------------------------------------------------------------------------
+global  main
+main:
+        call    read_card
+        mov     rax, instruction_at_main
+        push    rax                     ; prepare stack for coroutine call
+.loop:
+        _call   squasher
+        mov     rax, squasherOutput
+        call    write
 
         mov     rax, [i]
         cmp     rax, CARD_LEN
         jne     .loop
 
-		pop     rax                     ; clean stack after coroutine call
-        ret
-
-; --------------------------------------------------------------------------------
-global  _main
-_main:
-        call    READ_CARD
-        call    WRITE
-
+		pop     rax                     ; clean stack after coroutine calls
         mov     rax, SYS_EXIT
         mov     rdi, 0                  ; return code = 0
         syscall

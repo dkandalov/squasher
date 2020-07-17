@@ -1,7 +1,7 @@
 # See https://www.nasm.us and https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_mono/ld.html
 define compile
     nasm -fmacho64 -w+all $(1).asm && \
-    ld $(1).o -o $(1) -e _main -lSystem -no_pie -macosx_version_min 10.9 && \
+    ld $(1).o -o $(1) -e main -lSystem -no_pie -macosx_version_min 10.9 && \
     rm $(1).o
 endef
 

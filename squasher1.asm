@@ -13,15 +13,15 @@ default rel
         jmp     rdx
 %endmacro
 
-SYS_EXIT    equ     0x2000001
-SYS_READ    equ     0x2000003
-SYS_WRITE   equ     0x2000004
-STDIN       equ     0
-STDOUT      equ     1
+SYS_EXIT        equ     0x2000001
+SYS_READ        equ     0x2000003
+SYS_WRITE       equ     0x2000004
+STDIN           equ     0
+STDOUT          equ     1
 
-OFF         equ     0
-ON          equ     1
-CARD_LEN    equ     80
+OFF             equ     0
+ON              equ     1
+CARD_LEN        equ     80
 
 section .bss
 i:              resq    1
@@ -34,7 +34,7 @@ squasherOutput: resq    1
 section .text
 
 ; --------------------------------------------------------------------------------
-READ_CARD:
+read_card:
 		mov     rdx, CARD_LEN           ; maximum number of bytes to read
 		mov     rsi, card               ; buffer to read into
 		mov     rdi, STDIN              ; file descriptor
@@ -44,7 +44,7 @@ READ_CARD:
 	    _return
 
 ; --------------------------------------------------------------------------------
-NEXT_CHAR:
+next_char:
         mov     rsi, [i]
         mov     rdi, card
         mov     rax, 0
@@ -56,7 +56,7 @@ NEXT_CHAR:
         _return
 
 ; --------------------------------------------------------------------------------
-SQUASHER:
+squasher:
         mov     rax, [switch]
         cmp     rax, OFF
         je      .off
@@ -66,12 +66,12 @@ SQUASHER:
         jmp     .output_rax
 
 .off:
-        _call   NEXT_CHAR
+        _call   next_char
         cmp     rax, '*'
         jne     .output_rax
 
         mov     rbx, rax
-        _call   NEXT_CHAR
+        _call   next_char
         cmp     rax, '*'
         je      .do_squashing
 
@@ -88,27 +88,28 @@ SQUASHER:
         _return
 
 ; --------------------------------------------------------------------------------
-WRITE:
-        mov     qword [switch], OFF
-.loop:
-        _call   SQUASHER
-
+write:
         mov     rdx, 1                  ; message length
-        mov     rsi, squasherOutput     ; message to write
+        mov     rsi, rax                ; message to write
         mov     rdi, STDOUT             ; file descriptor
         mov     rax, SYS_WRITE
         syscall
+        _return
+
+; --------------------------------------------------------------------------------
+global  main
+main:
+        _call   read_card
+		mov     qword [switch], OFF
+.loop:
+        _call   squasher
+
+        mov     rax, squasherOutput
+        _call   write
 
         mov     rax, [i]
         cmp     rax, CARD_LEN
         jne     .loop
-        _return
-
-; --------------------------------------------------------------------------------
-global  _main
-_main:
-        _call   READ_CARD
-        _call   WRITE
 
         mov     rax, SYS_EXIT
         mov     rdi, 0                  ; return code = 0

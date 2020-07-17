@@ -1,16 +1,6 @@
 bits 64
 default rel
 
-SYS_EXIT    equ     0x2000001
-SYS_READ    equ     0x2000003
-SYS_WRITE   equ     0x2000004
-STDIN       equ     0
-STDOUT      equ     1
-
-OFF         equ     0
-ON          equ     1
-CARD_LEN    equ     80
-
 %macro _call 1
 		mov     rdx, %%_end
         push    qword rdx
@@ -23,11 +13,19 @@ CARD_LEN    equ     80
         jmp     rdx
 %endmacro
 
-section .bss
+SYS_EXIT    equ     0x2000001
+SYS_READ    equ     0x2000003
+SYS_WRITE   equ     0x2000004
+STDIN       equ     0
+STDOUT      equ     1
 
+OFF         equ     0
+ON          equ     1
+CARD_LEN    equ     80
+
+section .bss
 i:              resq    1
 card:           resq    CARD_LEN
-
 lastChar:       resq    1
 switch:         resq    1
 squasherOutput: resq    1
@@ -78,7 +76,7 @@ SQUASHER:
         je      .do_squashing
 
         mov     [lastChar], rax
-        mov     qword [switch], ON  ; remember to write char from lastChar next time
+        mov     qword [switch], ON  ; remember to write lastChar next time
         mov     rax, rbx
         jmp     .output_rax
 

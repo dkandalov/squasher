@@ -1,14 +1,6 @@
 bits 64
 default rel
 
-SYS_EXIT    equ     0x2000001
-SYS_READ    equ     0x2000003
-SYS_WRITE   equ     0x2000004
-STDIN       equ     0
-STDOUT      equ     1
-
-CARD_LEN    equ     80
-
 %macro _call 1
 		pop     rdx                     ; pop address of the instruction store for the current function/coroutine
 		mov     rcx, %%_end
@@ -19,6 +11,14 @@ CARD_LEN    equ     80
         jmp     [instruction_at_%1]
 %%_end: nop
 %endmacro
+
+SYS_EXIT    equ     0x2000001
+SYS_READ    equ     0x2000003
+SYS_WRITE   equ     0x2000004
+STDIN       equ     0
+STDOUT      equ     1
+
+CARD_LEN    equ     80
 
 section .data
 instruction_at_WRITE:      dq    WRITE

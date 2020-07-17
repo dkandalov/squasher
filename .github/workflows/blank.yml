@@ -15,3 +15,7 @@ jobs:
       run: brew install nasm
     - name: Make
       run: make
+    - name: Get smoke
+      run: wget https://github.com/SamirTalwar/smoke/releases/download/v2.1.0/smoke-v2.1.0-Darwin-x86_64
+    - name: Run smoke tests
+      run: ./smoke-v2.1.0-Darwin-x86_64 .

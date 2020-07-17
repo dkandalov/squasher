@@ -14,7 +14,6 @@ switch: resq    1                       ; module global data for SQUASHER
 i:      resq    1                       ; module global data for RDCRD and SQUASHER
 card:   resq    card_len                ; module global data for RDCRD and SQUASHER
 
-t1:     resq    1                       ; module global data for SQUASHER
 t2:     resq    1                       ; module global data for SQUASHER
 
 bytesRead: resq 1                       ; module local data for SQUASHER
@@ -56,32 +55,30 @@ SQUASHER:
         cmp     rax, OFF
         je      .off
 .on:
-        mov     rax, [t2]
-        mov     [out], rax
         mov     qword [switch], OFF
-        jmp     .exit
+        mov     rax, [t2]
+        jmp     .output_rax
 
 .off:
         call    RDCRD
-        mov     [t1], rax
+        mov     rbx, rax            ; temporary save char into rbx
         cmp     rax, '*'
-        jne     .output_t1
+        jne     .output_rax
 
         call    RDCRD
         mov     [t2], rax
         cmp     rax, '*'
         je      .equal_second_ast
+
         mov     qword [switch], ON
-        jmp     .output_t1
+        mov     rax, rbx            ; restore char from rbx
+        jmp     .output_rax
 
 .equal_second_ast:
-        mov     qword [t1], '^'
+        mov     rax, '^'
 
-.output_t1:
-        mov     rax, [t1]
+.output_rax:
         mov     [out], rax
-
-.exit:
         ret
 
 ; --------------------------------------------------------------------------------

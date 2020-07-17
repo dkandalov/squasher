@@ -16,7 +16,8 @@ section .bss
 
 i:              resq    1
 card:           resq    CARD_LEN
-t2:             resq    1
+
+lastChar:       resq    1
 switch:         resq    1
 squasherOutput: resq    1
 
@@ -52,21 +53,21 @@ SQUASHER:
         je      .off
 .on:
         mov     qword [switch], OFF
-        mov     rax, [t2]
+        mov     rax, [lastChar]
         jmp     .output_rax
 
 .off:
         call    NEXT_CHAR
-        mov     rbx, rax            ; temporary save char into rbx
         cmp     rax, '*'
         jne     .output_rax
 
+        mov     rbx, rax            ; temporary save char into rbx
         call    NEXT_CHAR
-        mov     [t2], rax
         cmp     rax, '*'
         je      .do_squashing
 
-        mov     qword [switch], ON  ; remember to write char from t2 next time
+        mov     [lastChar], rax
+        mov     qword [switch], ON  ; remember to write char from lastChar next time
         mov     rax, rbx            ; restore char from rbx
         jmp     .output_rax
 

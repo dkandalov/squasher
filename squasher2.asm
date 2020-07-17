@@ -7,8 +7,6 @@ SYS_WRITE   equ     0x2000004
 STDIN       equ     0
 STDOUT      equ     1
 
-OFF         equ     0
-ON          equ     1
 CARD_LEN    equ     80
 
 %macro _call 1
@@ -30,8 +28,6 @@ section .bss
 i:              resq    1
 card:           resq    CARD_LEN
 char:           resq    1
-lastChar:       resq    1
-switch:         resq    1
 squasherOutput: resq    1
 
 
@@ -61,26 +57,18 @@ NEXT_CHAR:
 
 ; --------------------------------------------------------------------------------
 SQUASHER:
-        mov     rax, [switch]
-        cmp     rax, OFF
-        je      .off
-.on:
-        mov     qword [switch], OFF
-        mov     rax, [lastChar]
-        jmp     .output_rax
-
-.off:
         call    NEXT_CHAR
         cmp     rax, '*'
         jne     .output_rax
 
-        mov     [char], rax
+        mov     rbx, rax
         call    NEXT_CHAR
         cmp     rax, '*'
         je      .do_squashing
 
-        mov     [lastChar], rax
-        mov     qword [switch], ON  ; remember to write lastChar next time
+		mov     [char], rax             ; save rax because its value will be erased by another coroutine
+		mov     [squasherOutput], rbx
+        _call   WRITE
         mov     rax, [char]
         jmp     .output_rax
 
@@ -94,9 +82,8 @@ SQUASHER:
 
 ; --------------------------------------------------------------------------------
 WRITE:
-        mov     qword [switch], OFF
         mov     rax, instruction_at_WRITE
-        push    rax
+        push    rax                     ; prepare stack for coroutine call
 .loop:
         _call   SQUASHER
 
@@ -110,7 +97,7 @@ WRITE:
         cmp     rax, CARD_LEN
         jne     .loop
 
-		pop     rax
+		pop     rax                     ; clean stack after coroutine call
         ret
 
 ; --------------------------------------------------------------------------------

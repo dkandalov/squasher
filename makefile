@@ -6,12 +6,14 @@ define compile
 endef
 
 build:
+	command -v nasm || brew install nasm
 	$(call compile,squasher1)
 	$(call compile,squasher2)
 
 test:
-	~/smoke-v2.1.0-Darwin-x86_64 --command ./squasher1 . && \
-	~/smoke-v2.1.0-Darwin-x86_64 --command ./squasher2 .
+	command -v ./smoke || curl -L https://github.com/SamirTalwar/smoke/releases/download/v2.1.0/smoke-v2.1.0-Darwin-x86_64 -o smoke && chmod +x ./smoke
+	./smoke --command ./squasher1 . && \
+	./smoke --command ./squasher2 .
 
 clean:
 	rm squasher1

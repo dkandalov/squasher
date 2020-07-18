@@ -2,15 +2,15 @@ bits 64
 default rel
 
 %macro _call 1
-	mov     rdx, %%_end
-	push    qword rdx
-	jmp     %1
+        mov     rdx, %%_end
+        push    qword rdx
+        jmp     %1
 %%_end: nop
 %endmacro
 
 %macro _return 0
-	pop     rdx
-	jmp     rdx
+        pop     rdx
+        jmp     rdx
 %endmacro
 
 SYS_EXIT        equ     0x2000001
@@ -34,13 +34,13 @@ section .text
 
 ; --------------------------------------------------------------------------------
 read_card:
-		mov     rdx, CARD_LEN           ; maximum number of bytes to read
-		mov     rsi, card               ; buffer to read into
-		mov     rdi, STDIN              ; file descriptor
+        mov     rdx, CARD_LEN           ; maximum number of bytes to read
+        mov     rsi, card               ; buffer to read into
+        mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
         syscall
         mov     qword [i], 0
-	    _return
+        _return
 
 ; --------------------------------------------------------------------------------
 next_char:
@@ -68,7 +68,7 @@ squasher:
         _call   next_char
         cmp     rax, '*'
         je     .check_second_asterisk
-		_return
+        _return
 
 .check_second_asterisk:
         mov     rbx, rax                ; temporary save first char to rbx

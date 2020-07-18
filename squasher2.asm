@@ -2,11 +2,11 @@ bits 64
 default rel
 
 %macro _call 1
-		pop     rdx                     ; pop address of the instruction store for the current function/coroutine
-		mov     rcx, %%_end
-		mov     [rdx], rcx              ; update the instruction store
+        pop     rdx                     ; pop address of the instruction store for the current function/coroutine
+        mov     rcx, %%_end
+        mov     [rdx], rcx              ; update the instruction store
 
-		mov     rdx, instruction_at_%1
+        mov     rdx, instruction_at_%1
         push    rdx                     ; push address of the instruction store so that the next function/coroutine can update it on exit
         jmp     [instruction_at_%1]
 %%_end: nop
@@ -33,13 +33,13 @@ section .text
 
 ; --------------------------------------------------------------------------------
 read_card:
-		mov     rdx, CARD_LEN           ; maximum number of bytes to read
-		mov     rsi, card               ; buffer to read into
-		mov     rdi, STDIN              ; file descriptor
+        mov     rdx, CARD_LEN           ; maximum number of bytes to read
+        mov     rsi, card               ; buffer to read into
+        mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
         syscall
         mov     qword [i], 0
-	    ret
+        ret
 
 ; --------------------------------------------------------------------------------
 next_char:
@@ -58,8 +58,8 @@ squasher:
         call    next_char
         cmp     rax, '*'
         je     .check_second_asterisk
-		_call   main
-		jmp     squasher
+        _call   main
+        jmp     squasher
 
 .check_second_asterisk:
         mov     rbx, rax                ; temporary save first char to rbx
@@ -67,18 +67,18 @@ squasher:
         cmp     rax, '*'
         je      .do_squashing
 
-		mov     [lastChar], rax         ; save rax because its value will be erased by another coroutine
-		mov     rax, rbx                ; load first char from rbx
+        mov     [lastChar], rax         ; save rax because its value will be erased by another coroutine
+        mov     rax, rbx                ; load first char from rbx
         _call   main
 
         mov     rax, [lastChar]
         _call   main
-		jmp     squasher
+        jmp     squasher
 
 .do_squashing:
         mov     rax, '^'
         _call   main
-		jmp     squasher
+        jmp     squasher
 
 ; --------------------------------------------------------------------------------
 write:
@@ -105,7 +105,7 @@ main:
         cmp     rax, CARD_LEN
         jne     .loop
 
-		pop     rax                     ; clean stack after coroutine calls
+        pop     rax                     ; clean stack after coroutine calls
         mov     rax, SYS_EXIT
         mov     rdi, 0                  ; return code = 0
         syscall

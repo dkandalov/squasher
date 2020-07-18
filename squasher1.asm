@@ -2,15 +2,15 @@ bits 64
 default rel
 
 %macro _call 1
-		mov     rdx, %%_end
-        push    qword rdx
-        jmp     %1
+	mov     rdx, %%_end
+	push    qword rdx
+	jmp     %1
 %%_end: nop
 %endmacro
 
 %macro _return 0
-		pop     rdx
-        jmp     rdx
+	pop     rdx
+	jmp     rdx
 %endmacro
 
 SYS_EXIT        equ     0x2000001
@@ -28,7 +28,6 @@ i:              resq    1
 card:           resq    CARD_LEN
 lastChar:       resq    1
 switch:         resq    1
-squasherOutput: resq    1
 
 
 section .text
@@ -63,48 +62,47 @@ squasher:
 .on:
         mov     qword [switch], OFF
         mov     rax, [lastChar]
-        jmp     .output_rax
+        _return
 
 .off:
         _call   next_char
         cmp     rax, '*'
-        jne     .output_rax
+        je     .check_second_asterisk
+		_return
 
-        mov     rbx, rax
+.check_second_asterisk:
+        mov     rbx, rax                ; temporary save first char to rbx
         _call   next_char
         cmp     rax, '*'
         je      .do_squashing
 
         mov     [lastChar], rax
-        mov     qword [switch], ON  ; remember to write lastChar next time
-        mov     rax, rbx
-        jmp     .output_rax
+        mov     qword [switch], ON      ; remember to write lastChar next time
+        mov     rax, rbx                ; load first char from rbx
+        _return
 
 .do_squashing:
         mov     rax, '^'
-
-.output_rax:
-        mov     [squasherOutput], rax
         _return
 
 ; --------------------------------------------------------------------------------
 write:
         mov     rdx, 1                  ; message length
-        mov     rsi, rax                ; message to write
+        push    rax
+        mov     rsi, rsp                ; message to write
         mov     rdi, STDOUT             ; file descriptor
         mov     rax, SYS_WRITE
         syscall
+        pop     rax
         _return
 
 ; --------------------------------------------------------------------------------
 global  main
 main:
         _call   read_card
-		mov     qword [switch], OFF
+        mov     qword [switch], OFF
 .loop:
         _call   squasher
-
-        mov     rax, squasherOutput
         _call   write
 
         mov     rax, [i]

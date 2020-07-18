@@ -23,7 +23,6 @@ section .bss
 i:              resq    1
 card:           resq    CARD_LEN
 lastChar:       resq    1
-squasherOutput: resq    1
 
 section .data
 instruction_at_main:       dq    main
@@ -58,35 +57,38 @@ next_char:
 squasher:
         call    next_char
         cmp     rax, '*'
-        jne     .output_rax
+        je     .check_second_asterisk
+		_call   main
+		jmp     squasher
 
-        mov     rbx, rax
+.check_second_asterisk:
+        mov     rbx, rax                ; temporary save first char to rbx
         call    next_char
         cmp     rax, '*'
         je      .do_squashing
 
 		mov     [lastChar], rax         ; save rax because its value will be erased by another coroutine
-		mov     [squasherOutput], rbx
+		mov     rax, rbx                ; load first char from rbx
         _call   main
 
         mov     rax, [lastChar]
-        jmp     .output_rax
+        _call   main
+		jmp     squasher
 
 .do_squashing:
         mov     rax, '^'
-
-.output_rax:
-        mov     [squasherOutput], rax
         _call   main
 		jmp     squasher
 
 ; --------------------------------------------------------------------------------
 write:
         mov     rdx, 1                  ; message length
-        mov     rsi, rax                ; message to write
+        push    rax
+        mov     rsi, rsp                ; message to write
         mov     rdi, STDOUT             ; file descriptor
         mov     rax, SYS_WRITE
         syscall
+        pop     rax
         ret
 
 ; --------------------------------------------------------------------------------
@@ -97,7 +99,6 @@ main:
         push    rax                     ; prepare stack for coroutine call
 .loop:
         _call   squasher
-        mov     rax, squasherOutput
         call    write
 
         mov     rax, [i]

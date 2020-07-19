@@ -17,11 +17,11 @@ SYS_READ        equ     0x2000003
 SYS_WRITE       equ     0x2000004
 STDIN           equ     0
 STDOUT          equ     1
-CARD_LEN        equ     80
+INPUT_SIZE      equ     80
 
 section .bss
 i:              resq    1
-card:           resq    CARD_LEN
+card:           resq    INPUT_SIZE
 lastChar:       resq    1
 
 section .data
@@ -33,7 +33,7 @@ section .text
 
 ; --------------------------------------------------------------------------------
 read_card:
-        mov     rdx, CARD_LEN           ; maximum number of bytes to read
+        mov     rdx, INPUT_SIZE         ; maximum number of bytes to read
         mov     rsi, card               ; buffer to read into
         mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
@@ -102,7 +102,7 @@ main:
         call    write
 
         mov     rax, [i]
-        cmp     rax, CARD_LEN
+        cmp     rax, INPUT_SIZE
         jne     .loop
 
         pop     rax                     ; clean stack after coroutine calls

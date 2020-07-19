@@ -8,7 +8,7 @@ default rel
 %%_end: nop
 %endmacro
 
-%macro _return 0
+%macro _ret 0
         pop     rdx
         jmp     rdx
 %endmacro
@@ -19,96 +19,96 @@ SYS_WRITE       equ     0x2000004
 STDIN           equ     0
 STDOUT          equ     1
 
-OFF             equ     0
-ON              equ     1
-CARD_LEN        equ     80
+FALSE           equ     0
+TRUE            equ     1
+INPUT_SIZE      equ     80
 
 section .bss
 i:              resq    1
-card:           resq    CARD_LEN
+card:           resq    INPUT_SIZE
 lastChar:       resq    1
-switch:         resq    1
+hasLastChar:    resq    1
 
 
 section .text
 
 ; --------------------------------------------------------------------------------
 read_card:
-        mov     rdx, CARD_LEN           ; maximum number of bytes to read
-        mov     rsi, card               ; buffer to read into
-        mov     rdi, STDIN              ; file descriptor
+        mov     rdx, INPUT_SIZE             ; maximum number of bytes to read
+        mov     rsi, card                   ; buffer to read into
+        mov     rdi, STDIN                  ; file descriptor
         mov     rax, SYS_READ
         syscall
         mov     qword [i], 0
-        _return
+        _ret
 
 ; --------------------------------------------------------------------------------
 next_char:
         mov     rsi, [i]
         mov     rdi, card
         mov     rax, 0
-        mov     al, [rdi + rsi]         ; output is stored in rax
+        mov     al, [rdi + rsi]             ; output is stored in rax
 
         inc     rsi
         mov     [i], rsi
 
-        _return
+        _ret
 
 ; --------------------------------------------------------------------------------
 squasher:
-        mov     rax, [switch]
-        cmp     rax, OFF
+        mov     rax, [hasLastChar]
+        cmp     rax, FALSE
         je      .off
 .on:
-        mov     qword [switch], OFF
+        mov     qword [hasLastChar], FALSE
         mov     rax, [lastChar]
-        _return
+        _ret
 
 .off:
         _call   next_char
         cmp     rax, '*'
         je     .check_second_asterisk
-        _return
+        _ret
 
 .check_second_asterisk:
-        mov     rbx, rax                ; temporary save first char to rbx
+        mov     rbx, rax                    ; temporary save first char to rbx
         _call   next_char
         cmp     rax, '*'
         je      .do_squashing
 
         mov     [lastChar], rax
-        mov     qword [switch], ON      ; remember to write lastChar next time
-        mov     rax, rbx                ; load first char from rbx
-        _return
+        mov     qword [hasLastChar], TRUE   ; remember to write lastChar next time
+        mov     rax, rbx                    ; load first char from rbx
+        _ret
 
 .do_squashing:
         mov     rax, '^'
-        _return
+        _ret
 
 ; --------------------------------------------------------------------------------
 write:
-        mov     rdx, 1                  ; message length
+        mov     rdx, 1                      ; message length
         push    rax
-        mov     rsi, rsp                ; message to write
-        mov     rdi, STDOUT             ; file descriptor
+        mov     rsi, rsp                    ; message to write
+        mov     rdi, STDOUT                 ; file descriptor
         mov     rax, SYS_WRITE
         syscall
         pop     rax
-        _return
+        _ret
 
 ; --------------------------------------------------------------------------------
 global  main
 main:
         _call   read_card
-        mov     qword [switch], OFF
+        mov     qword [hasLastChar], FALSE
 .loop:
         _call   squasher
         _call   write
 
         mov     rax, [i]
-        cmp     rax, CARD_LEN
+        cmp     rax, INPUT_SIZE
         jne     .loop
 
         mov     rax, SYS_EXIT
-        mov     rdi, 0                  ; return code = 0
+        mov     rdi, 0                      ; return code = 0
         syscall

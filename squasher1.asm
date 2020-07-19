@@ -3,7 +3,7 @@ default rel
 
 %macro _call 1
         mov     rdx, %%_end
-        push    qword rdx
+        push    rdx
         jmp     %1
 %%_end: nop
 %endmacro

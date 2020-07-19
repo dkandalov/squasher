@@ -1,13 +1,13 @@
 bits 64
 default rel
 
-%macro _call 1
-        pop     rdx                     ; pop address of the instruction store for the current function/coroutine
+%macro co_call 1
+        pop     rdx                     ; pop address of the instruction store for the current coroutine
         mov     rcx, %%_end
         mov     [rdx], rcx              ; update the instruction store
 
         mov     rdx, instruction_at_%1
-        push    rdx                     ; push address of the instruction store so that the next function/coroutine can update it on exit
+        push    rdx                     ; push address of the instruction store for the coroutine to update it on exit
         jmp     [instruction_at_%1]
 %%_end: nop
 %endmacro
@@ -58,7 +58,7 @@ squasher:
         call    next_char
         cmp     rax, '*'
         je     .check_second_asterisk
-        _call   main
+        co_call main
         jmp     squasher
 
 .check_second_asterisk:
@@ -69,15 +69,15 @@ squasher:
 
         mov     [lastChar], rax         ; save rax because its value will be erased by another coroutine
         mov     rax, rbx                ; load first char from rbx
-        _call   main
+        co_call main
 
         mov     rax, [lastChar]
-        _call   main
+        co_call main
         jmp     squasher
 
 .do_squashing:
         mov     rax, '^'
-        _call   main
+        co_call main
         jmp     squasher
 
 ; --------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ main:
         mov     rax, instruction_at_main
         push    rax                     ; prepare stack for coroutine call
 .loop:
-        _call   squasher
+        co_call squasher
         call    write
 
         mov     rax, [i]

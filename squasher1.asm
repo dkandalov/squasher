@@ -3,14 +3,14 @@ default rel
 
 %macro _call 1
         mov     rdx, %%_end
-        push    rdx
-        jmp     %1
-%%_end: nop
+        push    rdx         ; save returning point on stack
+        jmp     %1          ; call sub-function
+%%_end: nop                 ; returning point from sub-function
 %endmacro
 
 %macro _ret 0
-        pop     rdx
-        jmp     rdx
+        pop     rdx         ; load returning point from stack
+        jmp     rdx         ; jump back into caller function
 %endmacro
 
 SYS_EXIT        equ     0x2000001

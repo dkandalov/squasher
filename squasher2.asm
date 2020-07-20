@@ -2,14 +2,14 @@ bits 64
 default rel
 
 %macro co_call 1
-        pop     rdx                     ; pop instruction store address for the current coroutine
-        mov     rcx, %%_end
-        mov     [rdx], rcx              ; update address in the instruction store
+        pop     rdx                     ; pop address of entry point store for the current coroutine
+        mov     rcx, %%_end             ; write next entry point address to rcx
+        mov     [rdx], rcx              ; update value in entry point store
 
-        mov     rdx, instruction_at_%1
-        push    rdx                     ; push address of the instruction store for the coroutine to update it on exit
+        mov     rdx, instruction_at_%1  ; address of the entry point store for the next coroutine
+        push    rdx                     ; push address to update it on exit
         jmp     [rdx]                   ; call coroutine
-%%_end: nop                             ; continuation point
+%%_end: nop                             ; next entry point
 %endmacro
 
 SYS_EXIT        equ     0x2000001

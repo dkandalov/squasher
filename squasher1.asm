@@ -58,18 +58,15 @@ next_char:
 squasher:
         mov     rax, [hasLastChar]
         cmp     rax, FALSE
-        je      .off
-.on:
+        je      .no_lastChar
         mov     qword [hasLastChar], FALSE
         mov     rax, [lastChar]
         _ret
-
-.off:
+.no_lastChar:
         _call   next_char
         cmp     rax, '*'
         je     .check_second_asterisk
         _ret
-
 .check_second_asterisk:
         mov     rbx, rax                    ; temporary save first char to rbx
         _call   next_char
@@ -80,7 +77,6 @@ squasher:
         mov     qword [hasLastChar], TRUE   ; remember to write lastChar next time
         mov     rax, rbx                    ; load first char from rbx
         _ret
-
 .do_squashing:
         mov     rax, '^'
         _ret

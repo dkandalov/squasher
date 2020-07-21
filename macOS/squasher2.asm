@@ -25,8 +25,8 @@ input:          resq    INPUT_SIZE
 lastChar:       resq    1
 
 section .data
-instruction_at_main:       dq    main
-instruction_at_squasher:   dq    squasher
+instruction_at_main:       dq    main     ; stores resuming point of main
+instruction_at_squasher:   dq    squasher ; stores resuming point of squasher
 
 
 section .text

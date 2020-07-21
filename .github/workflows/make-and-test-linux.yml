@@ -12,4 +12,4 @@ jobs:
     - name: Make
       run: cd linux && make
     - name: Test
-      run: make test
+      run: cd linux && make test

@@ -5,7 +5,7 @@ default rel
         mov     rdx, %%_end
         push    rdx         ; save returning point on stack
         jmp     %1          ; call sub-function
-%%_end: nop                 ; returning point from sub-function
+%%_end: nop                 ; returning point
 %endmacro
 
 %macro _ret 0
@@ -25,7 +25,7 @@ INPUT_SIZE      equ     80
 
 section .bss
 i:              resq    1
-card:           resq    INPUT_SIZE
+input:          resq    INPUT_SIZE
 lastChar:       resq    1
 hasLastChar:    resq    1
 
@@ -33,9 +33,9 @@ hasLastChar:    resq    1
 section .text
 
 ; --------------------------------------------------------------------------------
-read_card:
+read_input:
         mov     rdx, INPUT_SIZE             ; maximum number of bytes to read
-        mov     rsi, card                   ; buffer to read into
+        mov     rsi, input                  ; buffer to read into
         mov     rdi, STDIN                  ; file descriptor
         mov     rax, SYS_READ
         syscall
@@ -45,7 +45,7 @@ read_card:
 ; --------------------------------------------------------------------------------
 next_char:
         mov     rsi, [i]
-        mov     rdi, card
+        mov     rdi, input
         mov     rax, 0
         mov     al, [rdi + rsi]             ; output is stored in rax
 
@@ -95,7 +95,7 @@ write:
 ; --------------------------------------------------------------------------------
 global  main
 main:
-        _call   read_card
+        _call   read_input
         mov     qword [hasLastChar], FALSE
 .loop:
         _call   squasher

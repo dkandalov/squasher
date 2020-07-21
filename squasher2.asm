@@ -2,9 +2,9 @@ bits 64
 default rel
 
 %macro co_call 1
-        pop     rdx                     ; pop address of entry point store for the current coroutine
-        mov     rcx, %%_end             ; write next entry point address to rcx
-        mov     [rdx], rcx              ; update value in entry point store
+        pop     rdx                     ; pop entry point store address for the current coroutine
+        mov     rcx, %%_end             ; move next entry point address to rcx
+        mov     [rdx], rcx              ; update value in the store
 
         mov     rdx, instruction_at_%1  ; address of the entry point store for the next coroutine
         push    rdx                     ; push address to update it on exit
@@ -21,7 +21,7 @@ INPUT_SIZE      equ     80
 
 section .bss
 i:              resq    1
-card:           resq    INPUT_SIZE
+input:          resq    INPUT_SIZE
 lastChar:       resq    1
 
 section .data
@@ -32,9 +32,9 @@ instruction_at_squasher:   dq    squasher
 section .text
 
 ; --------------------------------------------------------------------------------
-read_card:
+read_input
         mov     rdx, INPUT_SIZE         ; maximum number of bytes to read
-        mov     rsi, card               ; buffer to read into
+        mov     rsi, input              ; buffer to read into
         mov     rdi, STDIN              ; file descriptor
         mov     rax, SYS_READ
         syscall
@@ -44,7 +44,7 @@ read_card:
 ; --------------------------------------------------------------------------------
 next_char:
         mov     rsi, [i]
-        mov     rdi, card
+        mov     rdi, input
         mov     rax, 0
         mov     al, [rdi + rsi]         ; output is stored in rax
 
@@ -94,7 +94,7 @@ write:
 ; --------------------------------------------------------------------------------
 global  main
 main:
-        call    read_card
+        call    read_input
         mov     rax, instruction_at_main
         push    rax                     ; prepare stack for coroutine call
 .loop:

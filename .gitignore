@@ -1,6 +1,11 @@
 .idea
-*.o
-# Ignore executables
-squasher1
-squasher2
-smoke
+
+linux/*.o
+linux/squasher1
+linux/squasher2
+linux/smoke
+
+macOS/*.o
+macOS/squasher1
+macOS/squasher2
+macOS/smoke

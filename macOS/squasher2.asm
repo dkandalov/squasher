@@ -32,7 +32,7 @@ instruction_at_squasher:   dq    squasher
 section .text
 
 ; --------------------------------------------------------------------------------
-read_input
+read_input:
         mov     rdx, INPUT_SIZE         ; maximum number of bytes to read
         mov     rsi, input              ; buffer to read into
         mov     rdi, STDIN              ; file descriptor

@@ -10,6 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Make
-      run: make
+      run: cd macOS && make
     - name: Test
-      run: make test
+      run: cd macOS && make test

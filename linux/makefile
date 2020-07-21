@@ -1,7 +1,7 @@
 # See https://www.nasm.us and https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_mono/ld.html
 define compile
     nasm -felf64 -w+all $(1).asm && \
-    ld $(1).o -o $(1) -e main -m elf_x86_64 10.9 && \
+    ld $(1).o -o $(1) -e main -m elf_x86_64 && \
     rm $(1).o
 endef
 

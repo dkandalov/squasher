@@ -6,7 +6,7 @@ define compile
 endef
 
 build:
-	command -v nasm || apt-get install nasm
+	command -v nasm || sudo apt-get install nasm
 	$(call compile,squasher1)
 	$(call compile,squasher2)
 
